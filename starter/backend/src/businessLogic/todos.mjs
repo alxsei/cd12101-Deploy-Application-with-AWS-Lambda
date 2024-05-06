@@ -11,7 +11,7 @@ export async function createTodo(createTodoRequest, userId) {
     userId: userId,
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,
-    attachmentUrl: createTodoRequest.attachmentUrl,    
+    attachmentUrl: null,    
     createdAt: new Date().toISOString(),    
     done: false,
   };
