@@ -21,7 +21,7 @@ export const handler = middy()
     const todoId = event.pathParameters.todoId
     const userId = getUserId(event)
     
-    const updatedItem = await updateTodo(todoId, updatedTodo, userId)
+    const updatedItem = await updateTodo(todoId, userId, updatedTodo )
 
     return {
       statusCode: 200

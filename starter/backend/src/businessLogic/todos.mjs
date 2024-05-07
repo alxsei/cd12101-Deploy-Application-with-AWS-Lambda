@@ -44,7 +44,7 @@ export async function updateTodo(todoId, userId, updateTodoRequest) {
     done: updateTodoRequest.done,
   };
 
-  return await todoAccess.updateTodo(todoId, userId, updatedFields);
+  await todoAccess.updateTodo(todoId, userId, updatedFields);
 }
 
 

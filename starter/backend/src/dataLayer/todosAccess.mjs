@@ -7,10 +7,16 @@ const logger = createLogger('todosAccess')
 
 export class TodoAccess {
   constructor(
-    dynamoDbClient = DynamoDBDocument.from(AWSXRay.captureAWSv3Client(new DynamoDB())),
+    documentClient = AWSXRay.captureAWSv3Client(new DynamoDB()),
+    todosTable = process.env.TODOS_TABLE
   ) {
-    this.dynamoDbClient = dynamoDbClient
-    this.todosTable = process.env.TODOS_TABLE
+    this.documentClient = documentClient
+    this.todosTable = todosTable
+    this.dynamoDbClient = DynamoDBDocument.from(this.documentClient, {
+      marshallOptions: {
+        removeUndefinedValues: true
+      }
+    })
   }
 
 
@@ -55,9 +61,9 @@ export class TodoAccess {
 
     const result = await this.dynamoDbClient.query({
       TableName: this.todosTable,
-      KeyConditionExpression: 'userId = :userId',
+      KeyConditionExpression: 'userId = :uid',
       ExpressionAttributeValues: {
-        ':userId': userId
+        ':uid': userId
       }
     })
     return result.Items
@@ -70,11 +76,11 @@ export class TodoAccess {
     await this.dynamoDbClient.update({
       TableName: this.todosTable,
       Key: { todoId, userId },
-      UpdateExpression: 'set name = :name, dueDate = :dueDate, done = :done',
+      UpdateExpression: 'set name = :n, dueDate = :dd, done = :dn',
       ExpressionAttributeValues: {
-        ':name': todoUpdateFields.name,
-        ':dueDate': todoUpdateFields.dueDate,
-        ':done': todoUpdateFields.done
+        ':n': todoUpdateFields.name,
+        ':dd': todoUpdateFields.dueDate,
+        ':dn': todoUpdateFields.done
       }
     })
   }

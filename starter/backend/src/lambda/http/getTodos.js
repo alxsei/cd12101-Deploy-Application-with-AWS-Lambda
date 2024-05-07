@@ -18,6 +18,7 @@ export const handler = middy()
     logger.info('Processing event: ', event)
 
     const userId = getUserId(event)
+    logger.info('UserId: ', userId)
     const allTodoItems = await getTodos(userId)
 
     return {

@@ -1,3 +1,5 @@
+org: lexflex
+app: serverless-todo-app
 service: serverless-todo-app
 
 plugins:
@@ -16,7 +18,7 @@ provider:
   region: ${opt:region, 'us-east-1'}
 
   environment:
-    TODOS_TABLE: Todos-${self:provider.stage}
+    TODOS_TABLE: Todos-lexflex-v1-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
     SIGNED_URL_EXPIRATION: 300
     ATTACHMENT_S3_BUCKET: lexflex-uda4-todos-v1-${self:provider.stage}
@@ -36,13 +38,14 @@ functions:
           cors: true
           authorizer: Auth
     iamRoleStatements:
-      - Effect: 'Allow'
+      - Effect: Allow
         Action:
-          - 'dynamodb:Query'
+          - dynamodb:Query
         Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}'
       - Effect: 'Allow'
         Action:
           - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
         Resource:
           - '*'
 
@@ -59,13 +62,14 @@ functions:
             schemas:
               application/json: ${file(src/schemas/create-todo-request.json)}
     iamRoleStatements:
-      - Effect: 'Allow'
+      - Effect: Allow
         Action:
-          - 'dynamodb:PutItem'
+          - dynamodb:PutItem
         Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}'
       - Effect: 'Allow'
         Action:
           - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
         Resource:
           - '*'
 
@@ -82,13 +86,14 @@ functions:
             schemas:
               application/json: ${file(src/schemas/update-todo-request.json)}
     iamRoleStatements:
-      - Effect: 'Allow'
+      - Effect: Allow
         Action:
-          - 'dynamodb:UpdateItem'
+          - dynamodb:UpdateItem
         Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}'
       - Effect: 'Allow'
         Action:
           - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
         Resource:
           - '*'
 
@@ -102,13 +107,14 @@ functions:
           cors: true
           authorizer: Auth
     iamRoleStatements:
-      - Effect: 'Allow'
+      - Effect: Allow
         Action:
-          - 'dynamodb:DeleteItem'
+          - dynamodb:DeleteItem
         Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}'
       - Effect: 'Allow'
         Action:
           - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
         Resource:
           - '*'
 
@@ -126,13 +132,14 @@ functions:
         Action:
           - 's3:PutObject'
         Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
-      - Effect: 'Allow'
+      - Effect: Allow
         Action:
-          - 'dynamodb:UpdateItem'
+          - dynamodb:UpdateItem
         Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}'
       - Effect: 'Allow'
         Action:
           - 'xray:PutTraceSegments'
+          - 'xray:PutTelemetryRecords'
         Resource:
           - '*'
 
