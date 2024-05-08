@@ -13,7 +13,7 @@ export async function createTodo(createTodoRequest, userId) {
     userId: userId,
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,
-    attachmentUrl: `https://${s3_bucket_name}.s3.amazoneaws.com/${todoId}`,    
+    attachmentUrl: `https://${bucketName}.s3.amazoneaws.com/${todoId}`,    
     createdAt: new Date().toISOString(),    
     done: false
   };
