@@ -4,6 +4,8 @@ import { getUploadUrl } from '../fileStorage/attachmentUtils.mjs';
 
 const todoAccess = new TodoAccess();
 
+const bucketName = process.env.ATTACHMENT_S3_BUCKET;
+
 export async function createTodo(createTodoRequest, userId) {
   const todoId = uuidv4();
   const newTodoItem = {
@@ -11,9 +13,9 @@ export async function createTodo(createTodoRequest, userId) {
     userId: userId,
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,
-    attachmentUrl: null,    
+    attachmentUrl: `https://${s3_bucket_name}.s3.amazoneaws.com/${todoId}`,    
     createdAt: new Date().toISOString(),    
-    done: false,
+    done: false
   };
 
   return await todoAccess.createTodo(newTodoItem);

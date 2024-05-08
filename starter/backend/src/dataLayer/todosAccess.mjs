@@ -1,88 +1,103 @@
-import { DynamoDB } from '@aws-sdk/client-dynamodb'
-import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb'
-import AWSXRay from 'aws-xray-sdk-core'
-import { createLogger } from '../utils/logger.mjs'
+import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocument } from '@aws-sdk/lib-dynamodb';
+import AWSXRay from 'aws-xray-sdk-core';
 
-const logger = createLogger('todosAccess')
+import { createLogger } from '../utils/logger.mjs';
+
+const logger = createLogger('todosAccess');
+
+const dynamoDB = new DynamoDB({logger: undefined});
+const xrayWrappedDynamoDBClient = AWSXRay.captureAWSv3Client(dynamoDB);
+const documentClient = DynamoDBDocument.from(xrayWrappedDynamoDBClient);
+const todosTable = process.env.TODOS_TABLE;
+const todosIndex = process.env.INDEX_NAME;
 
 export class TodoAccess {
-  constructor(
-    documentClient = AWSXRay.captureAWSv3Client(new DynamoDB()),
-    todosTable = process.env.TODOS_TABLE
-  ) {
-    this.documentClient = documentClient
-    this.todosTable = todosTable
-    this.dynamoDbClient = DynamoDBDocument.from(this.documentClient, {
-      marshallOptions: {
-        removeUndefinedValues: true
-      }
-    })
-  }
 
 
   async createTodo(todoItem) {
-    logger.info(`Creating new todo`)
+    logger.info('Creating new todo');
 
-    await this.dynamoDbClient.put({
-      TableName: this.todosTable,
+    const result = await documentClient.put({
+      TableName: todosTable,
       Item: todoItem
-    })
+    });
 
-    return todoItem
+    logger.info('Created todo item', result);
+
+    return todoItem;
   }
 
 
   async deleteTodo(todoId, userId) {
-    logger.info(`Deleting todo ${todoId}`)
+    logger.info('Deleting todo', todoId);
 
-    await this.dynamoDbClient.delete({
-      TableName: this.todosTable,
-      Key: { userId, todoId }
-    })
+    const result = await documentClient.delete({
+      TableName: todosTable,
+      Key: { todoId, userId }
+    });
+
+    logger.info('Deleted todo item', result);
+
+    return result;
   }
 
 
   async saveUploadUrl(todoId, userId, uploadUrl) {
-    logger.info(`Saving upload URL to ${todoId}`)
+    logger.info('Saving upload URL to', todoId);
 
-    await this.dynamoDbClient.update({
-      TableName: this.todosTable,
-      Key: { userId, todoId },
-      UpdateExpression: 'set uploadUrl = :uploadUrl',
+    const result = await documentClient.update({
+      TableName: todosTable,
+      Key: { todoId, userId },
+      UpdateExpression: 'set attachmentUrl = :attachmentUrl',
       ExpressionAttributeValues: {
-        ':uploadUrl': uploadUrl
+        ':attachmentUrl': uploadUrl
       }
-    })
+    });
+
+    logger.info('Saved upload url', result);
   }
 
 
   async getTodos(userId) {
-    logger.info('Getting all todos')
+    logger.info('Getting all todos');
 
-    const result = await this.dynamoDbClient.query({
-      TableName: this.todosTable,
-      KeyConditionExpression: 'userId = :uid',
+    const result = await documentClient.query({
+      TableName: todosTable,
+      IndexName: todosIndex,
+      KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
-        ':uid': userId
+        ':userId': userId
       }
-    })
-    return result.Items
+    });
+
+    logger.info('Got all todo items', result);
+
+    return result.Items;
   }
 
 
   async updateTodo(todoId, userId, todoUpdateFields) {
-    logger.info(`Update todo ${todoId}`)
+    logger.info('Update todo', todoId)
 
-    await this.dynamoDbClient.update({
-      TableName: this.todosTable,
+    const result = await documentClient.update({
+      TableName: todosTable,
       Key: { todoId, userId },
-      UpdateExpression: 'set name = :n, dueDate = :dd, done = :dn',
+      UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
       ExpressionAttributeValues: {
-        ':n': todoUpdateFields.name,
-        ':dd': todoUpdateFields.dueDate,
-        ':dn': todoUpdateFields.done
-      }
-    })
+        ':name': todoUpdateFields.name,
+        ':dueDate': todoUpdateFields.dueDate,
+        ':done': todoUpdateFields.done
+      },
+      ExpressionAttributeNames: {
+        '#name': 'name'
+      },
+      ReturnValues: 'UPDATED_NEW'
+    });
+
+    logger.info('Updated todo item', result);
+
+    return todoUpdateFields;
   }
 
 }

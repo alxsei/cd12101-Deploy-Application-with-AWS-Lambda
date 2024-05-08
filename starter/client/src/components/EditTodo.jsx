@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Button, Form } from 'semantic-ui-react'
 import { getUploadUrl, uploadFile } from '../api/todos-api'
-import { useNavigate } from 'react-router-dom'
+//import { useNavigate } from 'react-router-dom'
 
 const domain = process.env.REACT_APP_AUTH0_DOMAIN
 const audience = `https://${domain}/api/v2/`
@@ -15,7 +15,7 @@ const UploadState = {
 }
 
 export function EditTodo() {
-  const navigate = useNavigate()
+  //const navigate = useNavigate()
   function renderButton() {
     return (
       <div>
@@ -57,7 +57,7 @@ export function EditTodo() {
       await uploadFile(uploadUrl, file)
 
       alert('File was uploaded!')
-      navigate('/')
+      //navigate('/')
     } catch (e) {
       alert('Could not upload a file: ' + e.message)
     } finally {
