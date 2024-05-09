@@ -11,22 +11,24 @@ const xrayWrappedDynamoDBClient = AWSXRay.captureAWSv3Client(dynamoDB);
 const documentClient = DynamoDBDocument.from(xrayWrappedDynamoDBClient);
 const todosTable = process.env.TODOS_TABLE;
 const todosIndex = process.env.INDEX_NAME;
+const bucketName = process.env.ATTACHMENT_S3_BUCKET;
 
 export class TodoAccess {
 
 
-  async createTodo(todoItem) {
-    logger.info('Creating new todo');
+  async createTodo(todo) {
+    //console.log(`Creating a todo with id ${todo.todoId}`)
+    logger.info(`Creating a todo for user`, { todoId: todo.todoId })
 
-    const result = await documentClient.put({
-      TableName: todosTable,
-      Item: todoItem
-    });
+    await documentClient.put({
+        TableName: todosTable,
+        Item: todo
+    })
 
-    logger.info('Created todo item', result);
+    logger.info(`todo was created`, {todoId: todo.todoId})
 
-    return todoItem;
-  }
+    return todo
+}
 
 
   async deleteTodo(todoId, userId) {
@@ -43,15 +45,17 @@ export class TodoAccess {
   }
 
 
-  async saveUploadUrl(todoId, userId, uploadUrl) {
+  async saveUploadUrl(todoId, userId) {
     logger.info('Saving upload URL to', todoId);
+
+    const attachmentUrl = `https://${bucketName}.s3.amazonaws.com/${todoId}`
 
     const result = await documentClient.update({
       TableName: todosTable,
       Key: { todoId, userId },
       UpdateExpression: 'set attachmentUrl = :attachmentUrl',
       ExpressionAttributeValues: {
-        ':attachmentUrl': uploadUrl
+        ':attachmentUrl': attachmentUrl
       }
     });
 

@@ -1,24 +1,25 @@
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid'
 import { TodoAccess } from '../dataLayer/todosAccess.mjs';
 import { getUploadUrl } from '../fileStorage/attachmentUtils.mjs';
 
 const todoAccess = new TodoAccess();
 
-const bucketName = process.env.ATTACHMENT_S3_BUCKET;
+
 
 export async function createTodo(createTodoRequest, userId) {
-  const todoId = uuidv4();
-  const newTodoItem = {
-    todoId: todoId,
-    userId: userId,
-    name: createTodoRequest.name,
-    dueDate: createTodoRequest.dueDate,
-    attachmentUrl: `https://${bucketName}.s3.amazoneaws.com/${todoId}`,    
-    createdAt: new Date().toISOString(),    
-    done: false
-  };
+  const itemId = uuid.v4()
+  const currentDatetime = new Date().toISOString()
 
-  return await todoAccess.createTodo(newTodoItem);
+
+  return await todoAccess.createTodo({
+      todoId: itemId,
+      userId: userId,
+      name: createTodoRequest.name,
+      dueDate: createTodoRequest.dueDate,
+      attachmentUrl: null,
+      createdAt: currentDatetime,
+      done: false
+  })
 }
 
 export async function deleteTodo(todoId, userId) {
@@ -28,7 +29,7 @@ export async function deleteTodo(todoId, userId) {
 
 export async function generateUploadUrl(todoId, userId) {
   const signedS3Url = await getUploadUrl(todoId);
-  await todoAccess.saveUploadUrl(todoId, userId, signedS3Url);
+  await todoAccess.saveUploadUrl(todoId, userId);
 
   return signedS3Url;
 }
@@ -48,6 +49,7 @@ export async function updateTodo(todoId, userId, updateTodoRequest) {
 
   await todoAccess.updateTodo(todoId, userId, updatedFields);
 }
+
 
 
 
